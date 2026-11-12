@@ -22,7 +22,7 @@ pipeline {
         stage('Build Image') {
             steps {
                 sh '''
-                    pwd
+                    cd catalog-service
                     docker build -t $IMAGE_NAME:$BUILD_NUMBER .
                 '''
             }
