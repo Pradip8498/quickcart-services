@@ -1,30 +1,19 @@
 pipeline {
     agent any
 
-    triggers {
-        pollSCM('H/2 * * * *')
-    }
-
     environment {
         IMAGE_NAME = 'pradip8498/catalog-service'
-        DEPLOYMENT = 'catalog-service'
-        CONTAINER = 'catalog-service'
     }
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build Image') {
             steps {
-                sh '''
-                    cd catalog-service
-                    docker build -t $IMAGE_NAME:$BUILD_NUMBER .
-                '''
+                dir('catalog-service') {
+                    sh '''
+                        docker build -t $IMAGE_NAME:$BUILD_NUMBER .
+                    '''
+                }
             }
         }
 
@@ -37,7 +26,7 @@ pipeline {
                 )]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login \
-                          -u "$DOCKER_USER" --password-stdin
+                            -u "$DOCKER_USER" --password-stdin
 
                         docker push $IMAGE_NAME:$BUILD_NUMBER
                         docker logout
@@ -46,26 +35,21 @@ pipeline {
             }
         }
 
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    # Replace BUILD_NUMBER in Kubernetes YAML
+                    envsubst < catalog-service/k8s/catalog.yaml \
+                        > catalog-service/k8s/catalog-deploy.yaml
 
-    stage('Deploy to Kubernetes') {
-        steps {
-            sh '''
-                kubectl set image deployment/catalog-service \
-                    catalog=pradip8498/catalog-service:${BUILD_NUMBER}
-    
-                kubectl rollout status deployment/catalog-service \
-                    --timeout=120s
-            '''
-        }
-    }
-    }
+                    # Apply updated YAML
+                    kubectl apply -f catalog-service/k8s/catalog-deploy.yaml
 
-    post {
-        success {
-            echo 'Catalog Service deployed successfully.'
-        }
-        failure {
-            echo 'Catalog Service deployment failed. Check the console output.'
+                    # Verify deployment
+                    kubectl rollout status deployment/catalog-service \
+                        --timeout=180s
+                '''
+            }
         }
     }
 }
