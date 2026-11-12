@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'pradip8498/catalog-service'
+        IMAGE_NAME = 'pradip8498/order-service'
     }
 
     stages {
 
         stage('Build Image') {
             steps {
-                dir('catalog-service') {
+                dir('order-service') {
                     sh '''
                         docker build -t $IMAGE_NAME:$BUILD_NUMBER .
                     '''
@@ -39,14 +39,14 @@ pipeline {
             steps {
                 sh '''
                     # Replace BUILD_NUMBER in Kubernetes YAML
-                    envsubst < catalog-service/k8s/catalog.yaml \
-                        > catalog-service/k8s/catalog-deploy.yaml
+                    envsubst < order-service/k8s/order.yaml \
+                        > order-service/k8s/order-deploy.yaml
 
                     # Apply updated YAML
-                    kubectl apply -f catalog-service/k8s/catalog-deploy.yaml
+                    kubectl apply -f order-service/k8s/order-deploy.yaml
 
                     # Verify deployment
-                    kubectl rollout status deployment/catalog-service \
+                    kubectl rollout status deployment/order-service \
                         --timeout=180s
                 '''
             }
