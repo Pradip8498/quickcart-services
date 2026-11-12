@@ -53,10 +53,11 @@ spec:
       labels: {app: catalog-service}
     spec:
       containers:
-        - name: catalog
-          image: catalog-service:1.0
-          imagePullPolicy: Never   # image built inside minikube's docker daemon
-          ports: [{containerPort: 8001}]
+      - name: catalog
+        image: pradip8498/catalog-service:${BUILD_NUMBER}
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8001
           env:
             - name: DATABASE_URL
               value: postgresql://catalog:catalogpass@catalog-db:5432/catalogdb
