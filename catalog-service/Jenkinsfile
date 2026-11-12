@@ -46,17 +46,18 @@ pipeline {
             }
         }
 
-        stage('Deploy to Minikube') {
-            steps {
-                sh '''
-                    kubectl set image deployment/$DEPLOYMENT \
-                      $CONTAINER=$IMAGE_NAME:$BUILD_NUMBER
 
-                    kubectl rollout status deployment/$DEPLOYMENT \
-                      --timeout=120s
-                '''
-            }
+    stage('Deploy to Kubernetes') {
+        steps {
+            sh '''
+                kubectl set image deployment/catalog-service \
+                    catalog=pradip8498/catalog-service:${BUILD_NUMBER}
+    
+                kubectl rollout status deployment/catalog-service \
+                    --timeout=120s
+            '''
         }
+    }
     }
 
     post {
